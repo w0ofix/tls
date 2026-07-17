@@ -13,5 +13,5 @@ type User struct {
 	Role     string `gorm:"default:user" json:"role"`
 	Bio      string `json:"bio"`
 	Avatar   string `json:"avatar"`
-	Ips      Ips    `gorm:"serializer:json" json:"ips"`
+	Ips      Ips    `gorm:"serializer:json" json:"-"`
 }
