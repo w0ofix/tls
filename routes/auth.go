@@ -1,10 +1,13 @@
 package routes
 
 import (
+	"slices"
+	
 	"github.com/gofiber/fiber/v3"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 
+	"github.com/w0ofix/tls/utils"
 	"github.com/w0ofix/tls/models"
 )
 
@@ -23,7 +26,35 @@ func RegisterAuthRoutes(router fiber.Router, db *gorm.DB) {
 }
 
 func (h *AuthHandler) login(c fiber.Ctx) error {
-	return c.JSON(fiber.Map{"token": "fake-jwt"})
+	var body struct {
+		Email    string `json:"email"`
+		Password string `json:"password"`
+	}
+
+	if err := c.Bind().Body(&body); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"success": false, "message": "Invalid body"})
+	}
+
+	var user models.User
+	if err := h.DB.Where("email = ?", body.Email).First(&user).Error; err != nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"success": false, "message": "Invalid credentials"})
+	}
+
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(body.Password)); err != nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"success": false, "message": "Invalid credentials"})
+	}
+
+	token, err := utils.GenerateToken(user.ID, user.Email, user.Username)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"success": false, "message": "Could not login"})
+	}
+
+	if !slices.Contains(user.Ips.LoginIps, c.IP()) {
+		user.Ips.LoginIps = append(user.Ips.LoginIps, c.IP())
+		h.DB.Save(&user)
+	}
+
+	return c.JSON(fiber.Map{"type": "Bearer", "access_token": token})
 }
 
 func (h *AuthHandler) register(c fiber.Ctx) error {
@@ -60,5 +91,5 @@ func (h *AuthHandler) register(c fiber.Ctx) error {
 }
 
 func (h *AuthHandler) logout(c fiber.Ctx) error {
-	return c.SendStatus(fiber.StatusOK)
+	return c.SendStatus(fiber.StatusNotImplemented)
 }
