@@ -48,6 +48,7 @@ func main() {
         })
     })
     routes.RegisterAuthRoutes(app, db)
+    routes.RegisterUserRoutes(app, db)
 
     app.Get("/*", static.New("./public"))
 
