@@ -40,7 +40,8 @@ func main() {
     }
 
     app := fiber.New()
-	app.Use(cors.New())
+	app.Use(cors.New()) // TODO: Config
+    app.Use(session.New()) // TODO: Config
 
     app.Get("/", func(c fiber.Ctx) error {
         return c.JSON(fiber.Map{
