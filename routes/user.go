@@ -41,12 +41,10 @@ func (h *UserHandler) getUsers(c fiber.Ctx) error {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"success": false, "message": "Missing token"})
 	}
 
-	claims, err := utils.ParseToken(jwt)
+	_, err := utils.ParseToken(jwt)
 	if err != nil {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"success": false, "message": "Invalid token"})
 	}
-
-	_ = claims
 
 	var users []models.User
 	if err := h.DB.Select("id", "email", "username", "bio", "avatar", "role", "created_at", "updated_at").Find(&users).Error; err != nil {

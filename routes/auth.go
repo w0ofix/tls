@@ -2,7 +2,7 @@ package routes
 
 import (
 	"slices"
-	
+
 	"github.com/gofiber/fiber/v3"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
