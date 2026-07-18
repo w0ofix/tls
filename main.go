@@ -1,24 +1,24 @@
 package main
 
 import (
-    "os"
-    "fmt"
-    "log"
+	"fmt"
+	"log"
+	"os"
 
-    "gorm.io/gorm"
-    "gorm.io/driver/mysql"
-    "github.com/joho/godotenv"
+	"github.com/joho/godotenv"
+	"gorm.io/driver/mysql"
+	"gorm.io/gorm"
 
-    "github.com/gofiber/fiber/v3"
+	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/middleware/cors"
 	"github.com/gofiber/fiber/v3/middleware/static"
 
-    "github.com/w0ofix/tls/models"
-    "github.com/w0ofix/tls/routes"
+	"github.com/w0ofix/tls/models"
+	"github.com/w0ofix/tls/routes"
 )
 
 func main() {
-    if err := godotenv.Load(); err != nil {
+	if err := godotenv.Load(); err != nil {
 		log.Println("no .env file found, relying on system environment variables")
 	}
 
@@ -35,22 +35,24 @@ func main() {
 	if err != nil {
 		log.Fatal("failed to connect to database: ", err)
 	}
-    if err := db.AutoMigrate(&models.User{}); err != nil {
-        log.Fatal("failed to migrate database: ", err)
-    }
+	if err := db.AutoMigrate(&models.User{}); err != nil {
+		log.Fatal("failed to migrate database: ", err)
+	}
 
-    app := fiber.New()
+	app := fiber.New()
 	app.Use(cors.New()) // TODO: Config
 
-    app.Get("/", func(c fiber.Ctx) error {
-        return c.JSON(fiber.Map{
-            "version": "1.0.0",
-        })
-    })
-    routes.RegisterAuthRoutes(app, db)
-    routes.RegisterUserRoutes(app, db)
+	app.Get("/", func(c fiber.Ctx) error {
+		return c.JSON(fiber.Map{
+			"version": "1.0.0",
+		})
+	})
 
-    app.Get("/*", static.New("./public"))
+	routes.RegisterAuthRoutes(app, db)
+	routes.RegisterUserRoutes(app, db)
+	routes.RegisterModRoutes(app, db)
 
-    log.Fatal(app.Listen(":3000"))
+	app.Get("/*", static.New("./public"))
+
+	log.Fatal(app.Listen(":3000"))
 }
