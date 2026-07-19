@@ -36,11 +36,11 @@ func (h *ModHandler) getMods(c fiber.Ctx) error {
 
 	_, err := utils.ParseToken(jwt)
 	if err != nil {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"success": false, "message": "Invalid token"})
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"success": false, "message": err.Error()})
 	}
 
 	var mods []models.Mod
-	if err := h.DB.Select("id", "name", "description", "author", "game", "category", "price", "image", "path").Where("status = 1").Find(&mods).Error; err != nil {
+	if err := h.DB.Select("id", "name", "description", "author", "game", "category", "price", "image", "path").Where("status = 0").Find(&mods).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"success": false, "message": "Could not fetch mods"})
 	}
 
@@ -55,7 +55,7 @@ func (h *ModHandler) getMod(c fiber.Ctx) error {
 
 	_, err := utils.ParseToken(jwt)
 	if err != nil {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"success": false, "message": "Invalid token"})
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"success": false, "message": err.Error()})
 	}
 
 	id := c.Params("id")
@@ -88,7 +88,7 @@ func (h *ModHandler) postMod(c fiber.Ctx) error {
 
 	claims, err := utils.ParseToken(jwt)
 	if err != nil {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"success": false, "message": "Invalid token"})
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"success": false, "message": err.Error()})
 	}
 
 	mod := models.Mod{
@@ -115,7 +115,7 @@ func (h *ModHandler) deleteMod(c fiber.Ctx) error {
 
 	claims, err := utils.ParseToken(jwt)
 	if err != nil {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"success": false, "message": "Invalid token"})
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"success": false, "message": err.Error()})
 	}
 
 	id := c.Params("id")
@@ -147,7 +147,7 @@ func (h *ModHandler) reportMod(c fiber.Ctx) error {
 
 	claims, err := utils.ParseToken(jwt)
 	if err != nil {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"success": false, "message": "Invalid token"})
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"success": false, "message": err.Error()})
 	}
 
 	id := c.Params("id")
@@ -195,7 +195,7 @@ func (h *ModHandler) createReportCategory(c fiber.Ctx) error {
 
 	claims, err := utils.ParseToken(jwt)
 	if err != nil {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"success": false, "message": "Invalid token"})
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"success": false, "message": err})
 	}
 
 	var user models.User
@@ -207,7 +207,7 @@ func (h *ModHandler) createReportCategory(c fiber.Ctx) error {
 		return c.Status(fiber.StatusForbidden).JSON(fiber.Map{"success": false, "message": "You must have administrator privileges to perform this operation"})
 	}
 
-	category := models.ModReportCategories{
+	category := models.ModReportCategory{
 		Name: body.Name,
 	}
 

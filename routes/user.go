@@ -1,14 +1,14 @@
 package routes
 
 import (
-	"time"
 	"strings"
+	"time"
 
-	"gorm.io/gorm"
 	"github.com/gofiber/fiber/v3"
+	"gorm.io/gorm"
 
-	"github.com/w0ofix/tls/utils"
 	"github.com/w0ofix/tls/models"
+	"github.com/w0ofix/tls/utils"
 )
 
 type UserHandler struct {
@@ -43,7 +43,7 @@ func (h *UserHandler) getUsers(c fiber.Ctx) error {
 
 	_, err := utils.ParseToken(jwt)
 	if err != nil {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"success": false, "message": "Invalid token"})
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"success": false, "message": err.Error()})
 	}
 
 	var users []models.User
@@ -75,7 +75,7 @@ func (h *UserHandler) getUser(c fiber.Ctx) error {
 
 	claims, err := utils.ParseToken(jwt)
 	if err != nil {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"success": false, "message": "Invalid token"})
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"success": false, "message": err.Error()})
 	}
 
 	id := c.Params("id")
