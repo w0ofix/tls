@@ -1,7 +1,7 @@
 package utils
 
 import (
-	"fmt"
+	"slices"
 	"sync"
 	"time"
 
@@ -10,6 +10,11 @@ import (
 
 var vpnCache sync.Map
 var _ = startCacheCleaner()
+
+var loopbacks = []string{
+	"127.0.0.1",
+	"::1",
+}
 
 func startCacheCleaner() bool {
 	go func() {
@@ -22,11 +27,13 @@ func startCacheCleaner() bool {
 }
 
 func VPNCheck(ip string) bool {
+	if slices.Contains(loopbacks, ip) {
+		return false
+	}
+
 	if value, ok := vpnCache.Load(ip); ok {
 		return value.(bool)
 	}
-
-	fmt.Println("Not catched, checking VPN status for IP:", ip)
 
 	cl := client.New()
 	resp, err := cl.Get("http://ip-api.com/json/" + ip + "?fields=proxy,hosting,mobile")
