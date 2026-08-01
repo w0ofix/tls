@@ -69,6 +69,13 @@ func (h *ModHandler) getMod(c fiber.Ctx) error {
 }
 
 func (h *ModHandler) postMod(c fiber.Ctx) error {
+	if utils.VPNCheck(c.IP()) {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"success": false,
+			"message": "This action is not allowed from a suspicious network provider (VPN, Proxy, Hosting and Mobile data networks)",
+		})
+	}
+
 	var body struct {
 		Name        string `json:"name"`
 		Description string `json:"description"`
@@ -135,6 +142,13 @@ func (h *ModHandler) deleteMod(c fiber.Ctx) error {
 }
 
 func (h *ModHandler) reportMod(c fiber.Ctx) error {
+	if utils.VPNCheck(c.IP()) {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"success": false,
+			"message": "This action is not allowed from a suspicious network provider (VPN, Proxy, Hosting and Mobile data networks)",
+		})
+	}
+
 	var body struct {
 		Message  string `json:"message"`
 		Category string `json:"category"`
@@ -180,6 +194,13 @@ func (h *ModHandler) reportMod(c fiber.Ctx) error {
 }
 
 func (h *ModHandler) downloadMod(c fiber.Ctx) error {
+	if utils.VPNCheck(c.IP()) {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"success": false,
+			"message": "This action is not allowed from a suspicious network provider (VPN, Proxy, Hosting and Mobile data networks)",
+		})
+	}
+
 	return c.SendStatus(fiber.StatusNotImplemented)
 }
 
