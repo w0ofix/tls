@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v3"
+	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 
 	"github.com/w0ofix/tls/models"
@@ -93,5 +94,73 @@ func (h *UserHandler) getUser(c fiber.Ctx) error {
 }
 
 func (h *UserHandler) updateUser(c fiber.Ctx) error {
-	return c.SendStatus(fiber.StatusNotImplemented)
+	var body struct {
+		Email    *string `json:"email"`
+		Username *string `json:"username"`
+		Password *string `json:"password"`
+		Bio      *string `json:"bio"`
+	}
+
+	jwt := strings.TrimPrefix(c.Get("Authorization"), "Bearer ")
+	if jwt == "" {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"success": false, "message": "Missing token"})
+	}
+
+	claims, err := utils.ParseToken(jwt)
+	if err != nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"success": false, "message": err.Error()})
+	}
+
+	id := c.Params("id")
+	if id != "me" {
+		return c.SendStatus(fiber.StatusNotImplemented)
+	}
+
+	if err := c.Bind().Body(&body); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"success": false, "message": "Invalid body"})
+	}
+
+	updates := map[string]interface{}{}
+	if body.Email != nil {
+		if !utils.IsValidEmail(*body.Email) {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"success": false, "message": "Invalid email"})
+		}
+
+		updates["email"] = *body.Email
+	}
+	if body.Username != nil {
+		if len(*body.Username) < 3 || len(*body.Username) > 20 {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"success": false, "message": "Username must be between 3 and 20 characters"})
+		}
+
+		updates["username"] = *body.Username
+	}
+	if body.Bio != nil {
+		if len(*body.Bio) > 240 {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"success": false, "message": "Bio must be less than 240 characters"})
+		}
+
+		updates["bio"] = *body.Bio
+	}
+	if body.Password != nil {
+		if len(*body.Password) < 8 {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"success": false, "message": "Password must be at least 8 characters"})
+		}
+
+		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(*body.Password), bcrypt.DefaultCost)
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"success": false, "message": "Could not update password"})
+		}
+		updates["password"] = string(hashedPassword)
+	}
+
+	if len(updates) == 0 {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"success": false, "message": "No fields to update"})
+	}
+
+	if err := h.DB.Model(&models.User{}).Where("id = ?", claims.UserID).Updates(updates).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"success": false, "message": "Could not update user"})
+	}
+
+	return c.JSON(fiber.Map{"success": true, "message": "User updated successfully"})
 }
