@@ -7,8 +7,8 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 
-	"github.com/w0ofix/tls/utils"
 	"github.com/w0ofix/tls/models"
+	"github.com/w0ofix/tls/utils"
 )
 
 type AuthHandler struct {
@@ -58,6 +58,13 @@ func (h *AuthHandler) login(c fiber.Ctx) error {
 }
 
 func (h *AuthHandler) register(c fiber.Ctx) error {
+	if utils.VPNCheck(c.IP()) {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"success": false,
+			"message": "This action is not allowed from a suspicious network provider (VPN, Proxy, Hosting and Mobile data networks)",
+		})
+	}
+
 	var body struct {
 		Email    string `json:"email"`
 		Username string `json:"username"`
