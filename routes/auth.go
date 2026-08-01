@@ -71,6 +71,17 @@ func (h *AuthHandler) register(c fiber.Ctx) error {
 		Password string `json:"password"`
 	}
 
+	if len(body.Username) < 3 || len(body.Username) > 20 {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"success": false, "message": "Username must be between 3 and 20 characters"})
+	}
+	if len(body.Password) < 8 {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"success": false, "message": "Password must be at least 8 characters"})
+	}
+
+	if !utils.IsValidEmail(body.Email) {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"success": false, "message": "Invalid email"})
+	}
+
 	if err := c.Bind().Body(&body); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"success": false, "message": "Invalid body"})
 	}
