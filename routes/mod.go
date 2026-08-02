@@ -1,6 +1,8 @@
 package routes
 
 import (
+	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/gofiber/fiber/v3"
@@ -98,6 +100,43 @@ func (h *ModHandler) postMod(c fiber.Ctx) error {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"success": false, "message": err.Error()})
 	}
 
+	file, err := c.FormFile("file")
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"success": false, "message": "Missing mod zip file"})
+	}
+
+	if !strings.HasSuffix(strings.ToLower(file.Filename), ".zip") {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"success": false, "message": "File must be a .zip"})
+	}
+
+	contentType := file.Header.Get("Content-Type")
+	allowedTypes := map[string]bool{
+		"application/zip":              true,
+		"application/x-zip-compressed": true,
+		"multipart/x-zip":              true,
+	}
+
+	if !allowedTypes[contentType] {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"success": false, "message": "Invalid file type"})
+	}
+
+	const maxSize = 500 * 1024 * 1024
+	if file.Size > maxSize {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"success": false, "message": "File too large (max 500MB)"})
+	}
+
+	name := utils.RandHex(16)
+	filename := name + ".zip"
+	savePath := filepath.Join("uploads", "mods", filename)
+
+	if err := os.MkdirAll(filepath.Dir(savePath), 0755); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"success": false, "message": "Could not post mod"})
+	}
+
+	if err := c.SaveFile(file, savePath); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"success": false, "message": "Could not save file"})
+	}
+
 	mod := models.Mod{
 		Name:        body.Name,
 		Description: body.Description,
@@ -105,6 +144,7 @@ func (h *ModHandler) postMod(c fiber.Ctx) error {
 		Game:        body.Game,
 		Category:    body.Category,
 		Price:       body.Price,
+		Path:        filename,
 	}
 
 	if err := h.DB.Create(&mod).Error; err != nil {
