@@ -1,6 +1,7 @@
 package models
 
 type Mod struct {
+	BaseModel
 	Name        string `gorm:"unique;not null" json:"name"`
 	Description string `json:"description"`
 	Author      string `gorm:"type:char(36);primaryKey" json:"author"`
