@@ -241,7 +241,33 @@ func (h *ModHandler) downloadMod(c fiber.Ctx) error {
 		})
 	}
 
-	return c.SendStatus(fiber.StatusNotImplemented)
+	jwt := strings.TrimPrefix(c.Get("Authorization"), "Bearer ")
+	if jwt == "" {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"success": false, "message": "Missing token"})
+	}
+
+	_, err := utils.ParseToken(jwt)
+	if err != nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"success": false, "message": err.Error()})
+	}
+
+	id := c.Params("id")
+
+	var mod models.Mod
+	if err := h.DB.Select("id", "name", "description", "author", "game", "category", "price", "image", "path").Where("id = ?", id).First(&mod).Error; err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"success": false, "message": "Mod not found"})
+	}
+
+	if mod.Price > 0 {
+		return c.Status(fiber.StatusPaymentRequired).JSON(fiber.Map{"success": false, "message": "This mod is paid and cannot be downloaded for free"})
+	}
+
+	filePath := filepath.Join("uploads", "mods", mod.Path)
+	if _, err := os.Stat(filePath); os.IsNotExist(err) {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"success": false, "message": "Mod file not found"})
+	}
+
+	return c.SendFile(filePath)
 }
 
 func (h *ModHandler) createReportCategory(c fiber.Ctx) error {
