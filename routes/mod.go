@@ -36,7 +36,7 @@ func (h *ModHandler) getMods(c fiber.Ctx) error {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"success": false, "message": "Missing token"})
 	}
 
-	_, err := utils.ParseToken(jwt)
+	_, err := utils.ParseToken(jwt, c.IP(), c.UserAgent())
 	if err != nil {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"success": false, "message": err.Error()})
 	}
@@ -55,7 +55,7 @@ func (h *ModHandler) getMod(c fiber.Ctx) error {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"success": false, "message": "Missing token"})
 	}
 
-	_, err := utils.ParseToken(jwt)
+	_, err := utils.ParseToken(jwt, c.IP(), c.UserAgent())
 	if err != nil {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"success": false, "message": err.Error()})
 	}
@@ -95,7 +95,7 @@ func (h *ModHandler) postMod(c fiber.Ctx) error {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"success": false, "message": "Missing token"})
 	}
 
-	claims, err := utils.ParseToken(jwt)
+	claims, err := utils.ParseToken(jwt, c.IP(), c.UserAgent())
 	if err != nil {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"success": false, "message": err.Error()})
 	}
@@ -160,7 +160,7 @@ func (h *ModHandler) deleteMod(c fiber.Ctx) error {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"success": false, "message": "Missing token"})
 	}
 
-	claims, err := utils.ParseToken(jwt)
+	claims, err := utils.ParseToken(jwt, c.IP(), c.UserAgent())
 	if err != nil {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"success": false, "message": err.Error()})
 	}
@@ -199,7 +199,7 @@ func (h *ModHandler) reportMod(c fiber.Ctx) error {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"success": false, "message": "Missing token"})
 	}
 
-	claims, err := utils.ParseToken(jwt)
+	claims, err := utils.ParseToken(jwt, c.IP(), c.UserAgent())
 	if err != nil {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"success": false, "message": err.Error()})
 	}
@@ -246,7 +246,7 @@ func (h *ModHandler) downloadMod(c fiber.Ctx) error {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"success": false, "message": "Missing token"})
 	}
 
-	_, err := utils.ParseToken(jwt)
+	_, err := utils.ParseToken(jwt, c.IP(), c.UserAgent())
 	if err != nil {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"success": false, "message": err.Error()})
 	}
@@ -280,7 +280,7 @@ func (h *ModHandler) createReportCategory(c fiber.Ctx) error {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"success": false, "message": "Missing token"})
 	}
 
-	claims, err := utils.ParseToken(jwt)
+	claims, err := utils.ParseToken(jwt, c.IP(), c.UserAgent())
 	if err != nil {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"success": false, "message": err})
 	}

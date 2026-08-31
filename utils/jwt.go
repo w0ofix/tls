@@ -9,22 +9,26 @@ import (
 )
 
 type Claims struct {
-	UserID   string `json:"user_id"`
-	Email    string `json:"email"`
-	Username string `json:"username"`
+	UserID    string `json:"user_id"`
+	Email     string `json:"email"`
+	Username  string `json:"username"`
+	Ip        string `json:"ip"`
+	UserAgent string `json:"user-agent"`
 	jwt.RegisteredClaims
 }
 
-func GenerateToken(userID, email, username string) (string, error) {
+func GenerateToken(userID, email, username string, ip string, ua string) (string, error) {
 	hours, err := strconv.Atoi(os.Getenv("JWT_EXPIRES_HOURS"))
 	if err != nil {
 		hours = 24
 	}
 
 	claims := Claims{
-		UserID:   userID,
-		Email:    email,
-		Username: username,
+		UserID:    userID,
+		Email:     email,
+		Username:  username,
+		Ip:        ip,
+		UserAgent: ua,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Duration(hours) * time.Hour)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
@@ -35,7 +39,7 @@ func GenerateToken(userID, email, username string) (string, error) {
 	return token.SignedString([]byte(os.Getenv("JWT_SECRET")))
 }
 
-func ParseToken(tokenString string) (*Claims, error) {
+func ParseToken(tokenString string, ip string, ua string) (*Claims, error) {
 	claims := &Claims{}
 
 	token, err := jwt.ParseWithClaims(tokenString, claims, func(t *jwt.Token) (interface{}, error) {
@@ -43,6 +47,10 @@ func ParseToken(tokenString string) (*Claims, error) {
 	})
 	if err != nil || !token.Valid {
 		return nil, err
+	}
+
+	if claims.Ip != ip || claims.UserAgent != ua {
+		return nil, jwt.ErrTokenInvalidClaims
 	}
 
 	return claims, nil

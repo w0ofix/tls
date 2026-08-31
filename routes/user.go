@@ -42,7 +42,7 @@ func (h *UserHandler) getUsers(c fiber.Ctx) error {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"success": false, "message": "Missing token"})
 	}
 
-	_, err := utils.ParseToken(jwt)
+	_, err := utils.ParseToken(jwt, c.IP(), c.UserAgent())
 	if err != nil {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"success": false, "message": err.Error()})
 	}
@@ -74,7 +74,7 @@ func (h *UserHandler) getUser(c fiber.Ctx) error {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"success": false, "message": "Missing token"})
 	}
 
-	claims, err := utils.ParseToken(jwt)
+	claims, err := utils.ParseToken(jwt, c.IP(), c.UserAgent())
 	if err != nil {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"success": false, "message": err.Error()})
 	}
@@ -106,7 +106,7 @@ func (h *UserHandler) updateUser(c fiber.Ctx) error {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"success": false, "message": "Missing token"})
 	}
 
-	claims, err := utils.ParseToken(jwt)
+	claims, err := utils.ParseToken(jwt, c.IP(), c.UserAgent())
 	if err != nil {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"success": false, "message": err.Error()})
 	}
