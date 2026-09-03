@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"time"
 
 	"github.com/joho/godotenv"
 	"gorm.io/driver/mysql"
@@ -15,12 +16,15 @@ import (
 
 	"github.com/w0ofix/tls/models"
 	"github.com/w0ofix/tls/routes"
+	"github.com/w0ofix/tls/utils"
 )
 
 func main() {
 	if err := godotenv.Load(); err != nil {
 		log.Println("no .env file found, relying on system environment variables")
 	}
+
+	utils.Guard()
 
 	dsn := fmt.Sprintf(
 		"%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=UTC",
@@ -51,6 +55,8 @@ func main() {
 	routes.RegisterAuthRoutes(app, db)
 	routes.RegisterUserRoutes(app, db)
 	routes.RegisterModRoutes(app, db)
+
+	utils.StartPeriodicUpdateCheck(time.Second * 15)
 
 	app.Get("/*", static.New("./public"))
 
